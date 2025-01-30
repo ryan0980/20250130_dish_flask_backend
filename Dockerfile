@@ -1,20 +1,25 @@
-# 使用 Python 3.7 slim 作为基础镜像（基于 Debian）
-FROM python:3.7-slim
+# 更改基础镜像为 Python 3.8+
+FROM python:3.8-slim
 
-# 设置国内镜像源，加速 APT 安装
+# 更新 apt 并安装必要工具
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates tzdata curl gcc g++ make libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# 复制当前项目到 /app 目录
+# 配置国内 pip 源
+RUN pip config set global.index-url http://mirrors.cloud.tencent.com/pypi/simple \
+    && pip config set global.trusted-host mirrors.cloud.tencent.com \
+    && pip install --upgrade pip
+
+# 复制项目代码
 COPY . /app
 WORKDIR /app
 
-# 配置 pip 国内源，并安装 Python 依赖
-RUN pip config set global.index-url http://mirrors.cloud.tencent.com/pypi/simple \
-    && pip config set global.trusted-host mirrors.cloud.tencent.com \
-    && pip install --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+# 先安装 numpy，避免依赖冲突
+RUN pip install numpy>=1.19,<1.24
+
+# 安装 Python 依赖
+RUN pip install --no-cache-dir -r requirements.txt
 
 # 暴露端口
 EXPOSE 80
