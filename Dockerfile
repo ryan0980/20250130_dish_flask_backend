@@ -1,4 +1,3 @@
-# 更改基础镜像为 Python 3.8+
 FROM python:3.8-slim
 
 # 更新 apt 并安装必要工具
@@ -15,8 +14,6 @@ RUN pip config set global.index-url http://mirrors.cloud.tencent.com/pypi/simple
 COPY . /app
 WORKDIR /app
 
-# 先安装 numpy，避免依赖冲突
-RUN pip install numpy>=1.19,<1.24
 
 # 安装 Python 依赖
 RUN pip install --no-cache-dir -r requirements.txt
@@ -26,3 +23,4 @@ EXPOSE 80
 
 # 启动服务
 CMD ["python3", "run.py", "0.0.0.0", "80"]
+
