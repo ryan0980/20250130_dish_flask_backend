@@ -6,6 +6,9 @@ from wxcloudrun.model import Counters
 from wxcloudrun.response import make_succ_empty_response, make_succ_response, make_err_response
 import time
 from together import Together  # 需要先安装 together 包
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
 
 
 @app.route('/')
@@ -324,3 +327,28 @@ def analyze_menu():
             "error": f"菜单分析失败: {error_message}",
             "timestamp": datetime.now().strftime('%d/%b/%Y %H:%M:%S')
         })
+
+
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """
+    健康检查接口,返回服务状态
+    :return: 返回服务状态信息
+    """
+    try:
+        # 检查数据库连接
+        db.session.execute('SELECT 1')
+        db_status = "healthy"
+    except Exception as e:
+        db_status = f"unhealthy: {str(e)}"
+    
+    # 构建状态信息
+    status = {
+        "status": "running",
+        "timestamp": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        "service": "flask-menu-analyzer",
+        "database": db_status,
+        "version": "1.0.0"  # 可以根据需要设置版本号
+    }
+    
+    return make_succ_response(status)
