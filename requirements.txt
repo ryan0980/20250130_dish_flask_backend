@@ -1,5 +1,5 @@
-click>=8.1.7,<9.0.0
-Flask>=2.0.2
+click==8.1.7
+Flask==2.0.2
 Flask-SQLAlchemy==2.5.1
 greenlet==1.1.2
 itsdangerous==2.0.1
