@@ -279,12 +279,17 @@ def analyze_menu():
                 parts = item.split(" | ")
                 if len(parts) == 4:  # 确保格式正确
                     name, desc, price, category = parts
+                    # 获取对应的原始英文菜名
+                    original_parts = menu_text.split('\n')[translated_items.index(item)].split(" | ")
+                    original_name = original_parts[0] if len(original_parts) >= 1 else "Unknown"
+                    
                     # 清理category字符串，只保留数字
                     category = ''.join(filter(str.isdigit, category))
                     # 确保category在有效范围内
                     if category in final_categories:
                         final_categories[category]["items"].append({
                             "name": name,
+                            "original_name": original_name,  # 添加原始英文名称
                             "description": desc,
                             "price": price,
                             "category": category
