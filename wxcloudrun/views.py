@@ -7,6 +7,7 @@ from wxcloudrun.response import make_succ_empty_response, make_succ_response, ma
 import time
 from together import Together  # 需要先安装 together 包
 from flask_sqlalchemy import SQLAlchemy
+import base64
 
 db = SQLAlchemy()
 
@@ -319,6 +320,57 @@ def analyze_menu():
                 print(f"- {item['name']} | {item['description']} | {item['price']}")
         
         return make_succ_response(menu_analysis)
+        
+    except Exception as e:
+        import traceback
+        error_message = str(e)
+        print("\n=== Error Details ===")
+        print(f"Error type: {type(e)}")
+        print(f"Error message: {error_message}")
+        print("Stack trace:")
+        print(traceback.format_exc())
+        return make_err_response({
+            "error": f"菜单分析失败: {error_message}",
+            "timestamp": datetime.now().strftime('%d/%b/%Y %H:%M:%S')
+        })
+
+
+@app.route('/api/analyze_menu_cloud', methods=['POST'])
+def analyze_menu_cloud():
+    """
+    从云托管对象存储获取菜单图片并返回结构化数据
+    :return: 返回分析结果
+    """
+    try:
+        # 获取请求体参数
+        params = request.get_json()
+        
+        if 'fileid' not in params:
+            return make_err_response('缺少fileid参数')
+        
+        # 获取fileid
+        fileid = params['fileid']
+        print("\n=== API Request Debug Info ===")
+        print(f"File ID: {fileid}")
+        
+        # 记录开始时间
+        start_time = time.time()
+        
+        # 下载文件
+        # 这里需要使用腾讯云的COS SDK来下载文件
+        # 假设已经配置好COS客户端
+        cos_client = ...  # 初始化COS客户端
+        
+        # 下载文件到本地
+        local_file_path = '/tmp/menu_image.png'  # 临时存储路径
+        cos_client.download_file(fileid, local_file_path)
+        
+        # 读取文件并转换为base64
+        with open(local_file_path, 'rb') as image_file:
+            image_base64 = base64.b64encode(image_file.read()).decode('utf-8')
+        
+        # 继续调用分析逻辑
+        return analyze_menu(image_base64)  # 调用已有的分析菜单函数
         
     except Exception as e:
         import traceback
