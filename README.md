@@ -1,124 +1,78 @@
-# wxcloudrun-flask
-[![GitHub license](https://img.shields.io/github/license/WeixinCloud/wxcloudrun-express)](https://github.com/WeixinCloud/wxcloudrun-express)
-![GitHub package.json dependency version (prod)](https://img.shields.io/badge/python-3.7.3-green)
+# 20250130_dish_flask_backend
 
-微信云托管 python Flask 框架模版，实现简单的计数器读写接口，使用云托管 MySQL 读写、记录计数值。
+这是点餐智选助手后端的基础服务，基于 Flask 框架并部署于微信云托管。该服务实现了菜单图片分析、结构化数据返回以及简单的计数器示例 API。
 
-![](https://qcloudimg.tencent-cloud.cn/raw/be22992d297d1b9a1a5365e606276781.png)
+---
 
+## 菜单分析功能概述
+
+在 `wxcloudrun/views.py` 文件中，菜单相关的功能主要集中在以下两个 API 路由中：
+
+### 1. `analyze_menu()`
+
+- **功能**: 分析上传的菜单图片并返回结构化数据。
+- **请求方法**: `POST`
+- **请求参数**:  
+  - `image`: 包含菜单图片的 Base64 编码字符串。
+
+- **处理流程**:
+  1. **参数检查**：确认请求体中包含 `image` 参数；若缺失则返回错误响应。
+  2. **调试信息打印**：输出 Base64 图片数据的前50个字符以辅助调试。
+  3. **初始化 Together 客户端**：使用 API 密钥初始化客户端。
+  4. **设置系统提示**：定义系统提示，引导模型解析菜单图片，提取菜单项的名称、描述、价格和类别。
+  5. **调用 API**：使用 Together 客户端传入菜单图片和系统提示，获取解析结果。
+  6. **结果处理**：将返回的菜单文本按行分割，分类存储到各个类别中，并处理错误情况。
+  7. **翻译提示构建**：构建翻译提示，将提取的菜单项翻译成中文，同时保持格式一致。
+  8. **调用翻译 API**：使用 Together 客户端调用翻译模型，获取翻译后的菜单数据。
+  9. **构建最终结果**：整理翻译后的菜单项，包含处理时间、时间戳、原始文本与翻译文本。
+  10. **返回响应**：返回包含结构化菜单分析结果的成功响应。
+
+### 2. `analyze_menu_cloud()`
+
+- **功能**: 从云托管对象存储中获取菜单图片并返回结构化数据。
+- **请求方法**: `POST`
+- **请求参数**:
+  - `fileid`: 云存储中菜单图片的文件 ID。
+
+- **处理流程**:
+  1. **参数检查**：确认请求体中包含 `fileid` 参数；若缺失则返回错误响应。
+  2. **调试信息打印**：输出接收到的文件 ID，便于调试。
+  3. **文件下载**：使用腾讯云 COS SDK 下载指定文件到本地临时路径。
+  4. **文件读取与转换**：将下载的图片文件读取并转换为 Base64 编码。
+  5. **调用分析函数**：将 Base64 编码后的图片数据传递给 `analyze_menu()` 函数进行菜单分析。
+
+---
 
 ## 快速开始
-前往 [微信云托管快速开始页面](https://developers.weixin.qq.com/miniprogram/dev/wxcloudrun/src/basic/guide.html)，选择相应语言的模板，根据引导完成部署。
 
-## 本地调试
-下载代码在本地调试，请参考[微信云托管本地调试指南](https://developers.weixin.qq.com/miniprogram/dev/wxcloudrun/src/guide/debug/)
+1. **本地调试**  
+   下载代码后，参考微信云托管本地调试指南进行调试。
 
-## 实时开发
-代码变动时，不需要重新构建和启动容器，即可查看变动后的效果。请参考[微信云托管实时开发指南](https://developers.weixin.qq.com/miniprogram/dev/wxcloudrun/src/guide/debug/dev.html)
+2. **部署**  
+   使用 Dockerfile 构建镜像，并部署到微信云托管，确保正确配置环境变量（如 `MYSQL_ADDRESS`、`MYSQL_USERNAME`、`MYSQL_PASSWORD`）。
 
-## Dockerfile最佳实践
-请参考[如何提高项目构建效率](https://developers.weixin.qq.com/miniprogram/dev/wxcloudrun/src/scene/build/speed.html)
+3. **示例 API 调用**
 
-## 目录结构说明
+- **获取计数**  
+  ```bash
+  curl https://<云托管服务域名>/api/count
+  ```
 
-~~~
-.
-├── Dockerfile dockerfile       dockerfile
-├── README.md README.md         README.md文件
-├── container.config.json       模板部署「服务设置」初始化配置（二开请忽略）
-├── requirements.txt            依赖包文件
-├── config.py                   项目的总配置文件  里面包含数据库 web应用 日志等各种配置
-├── run.py                      flask项目管理文件 与项目进行交互的命令行工具集的入口
-└── wxcloudrun                  app目录
-    ├── __init__.py             python项目必带  模块化思想
-    ├── dao.py                  数据库访问模块
-    ├── model.py                数据库对应的模型
-    ├── response.py             响应结构构造
-    ├── templates               模版目录,包含主页index.html文件
-    └── views.py                执行响应的代码所在模块  代码逻辑处理主要地点  项目大部分代码在此编写
-~~~
+- **更新计数（自增）**  
+  ```bash
+  curl -X POST -H 'Content-Type: application/json' -d '{"action": "inc"}' https://<云托管服务域名>/api/count
+  ```
+
+---
+
+## 前端项目
+
+[前端项目链接占位符](#)
 
 
 
-## 服务 API 文档
+---
 
-### `GET /api/count`
+## 许可证
 
-获取当前计数
-
-#### 请求参数
-
-无
-
-#### 响应结果
-
-- `code`：错误码
-- `data`：当前计数值
-
-##### 响应结果示例
-
-```json
-{
-  "code": 0,
-  "data": 42
-}
-```
-
-#### 调用示例
-
-```
-curl https://<云托管服务域名>/api/count
-```
-
-
-
-### `POST /api/count`
-
-更新计数，自增或者清零
-
-#### 请求参数
-
-- `action`：`string` 类型，枚举值
-  - 等于 `"inc"` 时，表示计数加一
-  - 等于 `"clear"` 时，表示计数重置（清零）
-
-##### 请求参数示例
-
-```
-{
-  "action": "inc"
-}
-```
-
-#### 响应结果
-
-- `code`：错误码
-- `data`：当前计数值
-
-##### 响应结果示例
-
-```json
-{
-  "code": 0,
-  "data": 42
-}
-```
-
-#### 调用示例
-
-```
-curl -X POST -H 'content-type: application/json' -d '{"action": "inc"}' https://<云托管服务域名>/api/count
-```
-
-## 使用注意
-如果不是通过微信云托管控制台部署模板代码，而是自行复制/下载模板代码后，手动新建一个服务并部署，需要在「服务设置」中补全以下环境变量，才可正常使用，否则会引发无法连接数据库，进而导致部署失败。
-- MYSQL_ADDRESS
-- MYSQL_PASSWORD
-- MYSQL_USERNAME
-以上三个变量的值请按实际情况填写。如果使用云托管内MySQL，可以在控制台MySQL页面获取相关信息。
-
-
-
-## License
-
-[MIT](./LICENSE)
+本项目采用 [MIT License](LICENSE) 开源。
